@@ -1,7 +1,8 @@
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import javax.naming.ConfigurationException;
+import javax.naming.NameNotFoundException;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -12,84 +13,151 @@ import javax.sound.sampled.TargetDataLine;
 
 public class AudioListener {
 
-	private Mixer.Info selectedInputInfo;
-	private Mixer.Info selectedOutputInfo;
-	private AudioFormat selectedFormat;
+	private Mixer.Info currentInputInfo;
+	private Mixer.Info currentOutputInfo;
+	private AudioFormat currentAudioFormat;
 	private boolean listeningThreadRunning = true;
-	private TargetDataLine microphone = null;
-	private SourceDataLine speakers = null;
+	private TargetDataLine input = null;
+	private SourceDataLine output = null;
 	private int listenLength;
 
 	public AudioListener() {
-		System.out.println("AudioListener starting...");
-		selectOptions();
-
-		Listen();
-
-		System.out.println();
-		System.out.println("AudioListener stopping...");
+		setDefaultConfig();
 	}
 
-	private void selectOptions() {
-		Scanner scanner = new Scanner(System.in);
-		// clearConsole();
-		System.out.println();
-		selectMicrophone(scanner);
-		//Utils.clearConsole();
-		selectSpeakers(scanner);
-		//Utils.clearConsole();
-		selectFormat(scanner);
-		//Utils.clearConsole();
-		selectTimespan(scanner);
-	}
-
-	private void selectTimespan(Scanner scanner) {
-		System.out.println();
-		System.out.println("How many seconds would you like to record for?");
-		this.listenLength = Integer.parseInt(scanner.nextLine());
-
-	}
-
-	private void selectMicrophone(Scanner scanner) {
-		int selectedIndex = -1;
+	private void setDefaultConfig() {
 		Mixer.Info[] inputs = getAllLinesOfType(TargetDataLine.class);
 
 		for (int i = 0; i < inputs.length; i++) {
-			System.out.println("[" + i + "]\tLine Name: " + inputs[i].getName());
-			System.out.println("\tLine Description: " + inputs[i].getDescription());
+			if (inputs[i].getName().toLowerCase().contains("default")) {
+				this.currentInputInfo = inputs[i];
+			}
 		}
 
-		System.out.println("Select an input source: ");
-		selectedIndex = Integer.parseInt(scanner.nextLine());
-		while (selectedIndex < 0 && selectedIndex > inputs.length) {
-			System.out.println("Please select a valid output:");
-			selectedIndex = Integer.parseInt(scanner.nextLine());
-		}
-
-		System.out.println("Selected " + inputs[selectedIndex].getName());
-		System.out.println();
-		this.selectedInputInfo = inputs[selectedIndex];
-	}
-
-	private void selectSpeakers(Scanner scanner) {
-		int selectedIndex = -1;
 		Mixer.Info[] outputs = getAllLinesOfType(SourceDataLine.class);
 
-		for (int i = 0; i < outputs.length; i++) {
-			System.out.println("[" + i + "]\tLine Name: " + outputs[i].getName());
-			System.out.println("\tLine Description: " + outputs[i].getDescription());
+		for (int i = 0; i < inputs.length; i++) {
+			if (outputs[i].getName().toLowerCase().contains("default")) {
+				this.currentOutputInfo = outputs[i];
+			}
 		}
 
-		System.out.println("Select an output target: ");
-		selectedIndex = Integer.parseInt(scanner.nextLine());
-		while (selectedIndex < 0 && selectedIndex > outputs.length) {
-			System.out.println("Please select a valid output:");
-			selectedIndex = Integer.parseInt(scanner.nextLine());
+		if (hasConfigInput()) {
+			AudioFormat[] formats = getAllAudioFormatTypes();
+			if (formats.length >= 0) {
+				this.currentAudioFormat = formats[0];
+			}
+		}
+	}
+
+//	private void selectTimespan(Scanner scanner) {
+//		System.out.println();
+//		System.out.println("How many seconds would you like to record for?");
+//		this.listenLength = Integer.parseInt(scanner.nextLine());
+//	}
+
+	public boolean hasConfigInput() {
+		return this.currentInputInfo != null;
+	}
+
+	public String getCurrentInputName() {
+		if (this.currentInputInfo == null) {
+			return "None Set";
 		}
 
-		System.out.println("Selected " + outputs[selectedIndex].getName());
-		System.out.println();
-		this.selectedOutputInfo = outputs[selectedIndex];
+		return this.currentInputInfo.getName();
+	}
+
+	public String getCurrentOutputName() {
+		if (this.currentOutputInfo == null) {
+			return "None Set";
+		}
+		return this.currentOutputInfo.getName();
+	}
+
+	public String getCurrentFormat() {
+		if (this.currentAudioFormat == null) {
+			return "None Set";
+		}
+		return this.currentAudioFormat.toString();
+	}
+
+	public String[] getAvailableInputs() {
+		Mixer.Info[] allInputInfos = getAllLinesOfType(TargetDataLine.class);
+
+		String[] results = new String[allInputInfos.length];
+
+		for (int i = 0; i < results.length; i++) {
+			String name = allInputInfos[i].getName();
+			String description = allInputInfos[i].getDescription();
+			results[i] = name + "," + description;
+		}
+		return results;
+	}
+
+	public String[] getAvailableOutputs() {
+		Mixer.Info[] allOutputInfos = getAllLinesOfType(SourceDataLine.class);
+
+		String[] results = new String[allOutputInfos.length];
+
+		for (int i = 0; i < results.length; i++) {
+			String name = allOutputInfos[i].getName();
+			String description = allOutputInfos[i].getDescription();
+			results[i] = name + "," + description;
+		}
+		return results;
+	}
+
+	public void setInput(String name) throws NameNotFoundException {
+		Mixer.Info[] inputInfos = getAllLinesOfType(TargetDataLine.class);
+		boolean isFound = false;
+
+		int i = 0;
+		while (i < inputInfos.length && isFound == false) {
+			if (inputInfos[i].getName().equals(name)) {
+				this.currentInputInfo = inputInfos[i];
+				isFound = true;
+			}
+			i++;
+		}
+
+		throw new NameNotFoundException("Input device '" + name + "' could not be found");
+	}
+
+	public void setOutput(String name) throws NameNotFoundException {
+		Mixer.Info[] inputInfos = getAllLinesOfType(SourceDataLine.class);
+		boolean isFound = false;
+
+		int i = 0;
+		while (i < inputInfos.length && isFound == false) {
+			if (inputInfos[i].getName().equals(name)) {
+				this.currentOutputInfo = inputInfos[i];
+				isFound = true;
+			}
+			i++;
+		}
+
+		throw new NameNotFoundException("Output device '" + name + "' could not be found");
+	}
+	
+	public void setFormat(String format) throws ConfigurationException, NameNotFoundException {
+		if (!hasConfigInput()) {
+			throw new ConfigurationException("Input source needs to be set first");
+		} else {
+			AudioFormat[] formats = getAllAudioFormatTypes();
+			boolean isFound = false;
+			
+			int i = 0;
+			while (i < formats.length && isFound == false) {
+				if (formats[i].toString().equals(format)) {
+					this.currentAudioFormat = formats[i];
+					isFound = true;
+				}
+				i++;
+			}
+			
+			throw new NameNotFoundException("Audio Format '" + format + "' could not be found");
+		}
 	}
 
 	private <T> Mixer.Info[] getAllLinesOfType(T audioType) {
@@ -113,68 +181,72 @@ public class AudioListener {
 		return results.toArray(resultsArr);
 	}
 
-	private void selectFormat(Scanner scanner) {
-		int selectedIndex = -1;
-		Mixer micMixer = AudioSystem.getMixer(this.selectedInputInfo);
-
-		printSupportedFormats(micMixer);
-
-		System.out.println("Select a format: ");
-		selectedIndex = Integer.parseInt(scanner.nextLine());
-		if (selectedIndex != -1) {
-			//Mixer.Info selectedMixerInfo = AudioSystem.getMixerInfo()[selectedIndex];
-			AudioFormat selectedFormat = ((DataLine.Info) micMixer.getTargetLineInfo()[0]).getFormats()[selectedIndex];
-			System.out.println("Selected " + selectedFormat.toString());
-			System.out.println();
-			this.selectedFormat = selectedFormat;
+	public String[] getAvailableFormats() {
+		AudioFormat[] formats = getAllAudioFormatTypes();
+		String[] result = new String[formats.length];
+		
+		int i = 0;
+		while (i < result.length) {
+			result[i]= formats[i].toString(); 
+			i++;
 		}
+		
+		return result;
 	}
 
-	private void printSupportedFormats(Mixer micMixer) {
-		Line.Info[] targetLineInfo = micMixer.getTargetLineInfo();
-		int i = 0;
-		for (Line.Info info : targetLineInfo) {
-			if (info instanceof DataLine.Info) {
-				DataLine.Info dataLineInfo = (DataLine.Info) info;
+	private AudioFormat[] getAllAudioFormatTypes() {
+		ArrayList<AudioFormat> formats = new ArrayList<AudioFormat>();
 
-				AudioFormat[] formats = dataLineInfo.getFormats();
-				for (final AudioFormat format : formats) {
-					System.out.println("[" + i + "]\t" + format.toString());
-					i++;
+		if (hasConfigInput()) {
+			Mixer mixer = AudioSystem.getMixer(this.currentInputInfo);
+			Line.Info[] targetLineInfo = mixer.getTargetLineInfo();
+			
+			int i = 0;
+			for (Line.Info info : targetLineInfo) {
+				if (info instanceof DataLine.Info) {
+					DataLine.Info dataLineInfo = (DataLine.Info) info;
+
+					AudioFormat[] lineFormats = dataLineInfo.getFormats();
+					for (final AudioFormat format : lineFormats) {
+						formats.add(format);
+						i++;
+					}
 				}
 			}
 		}
+		AudioFormat[] result = new AudioFormat[formats.size()];
+		return formats.toArray(result);
 	}
 
 	private void Listen() {
-		AudioFormat format = this.selectedFormat;
+		AudioFormat format = this.currentAudioFormat;
 
 		try {
 			// Speaker
-			Mixer speakerMixer = AudioSystem.getMixer(this.selectedOutputInfo);
+			Mixer speakerMixer = AudioSystem.getMixer(this.currentOutputInfo);
 			DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
-			speakers = (SourceDataLine) speakerMixer.getLine(info);
-			speakers.open();
+			output = (SourceDataLine) speakerMixer.getLine(info);
+			output.open();
 
 			// Microphone
-			Mixer micMixer = AudioSystem.getMixer(this.selectedInputInfo);
+			Mixer micMixer = AudioSystem.getMixer(this.currentInputInfo);
 			info = new DataLine.Info(TargetDataLine.class, format);
-			microphone = (TargetDataLine) micMixer.getLine(info);
-			microphone.open();
+			input = (TargetDataLine) micMixer.getLine(info);
+			input.open();
 
 			Thread monitorThread = new Thread() {
 				@Override
 				public void run() {
-					microphone.start();
-					speakers.start();
+					input.start();
+					output.start();
 
-					byte[] data = new byte[microphone.getBufferSize() / 5];
+					byte[] data = new byte[input.getBufferSize() / 5];
 					int readBytes;
 
 					while (listeningThreadRunning) {
-						readBytes = microphone.read(data, 0, data.length);
-						speakers.write(data, 0, readBytes);
-						//printMicOutput(data);
+						readBytes = input.read(data, 0, data.length);
+						output.write(data, 0, readBytes);
+						// printMicOutput(data);
 					}
 				}
 			};
@@ -184,18 +256,18 @@ public class AudioListener {
 
 			TimeUnit.SECONDS.sleep(listenLength);
 			listeningThreadRunning = false;
-			microphone.stop();
-			microphone.close();
+			input.stop();
+			input.close();
 			System.out.println("End LIVE Monitor");
-			
+
 		} catch (Exception e) {
 			System.out.println("Error occured while listening:");
 			e.printStackTrace();
 		} finally {
-			if (speakers != null) {
-				speakers.drain();
-				speakers.close();
-				microphone.close();
+			if (output != null) {
+				output.drain();
+				output.close();
+				input.close();
 			}
 		}
 	}

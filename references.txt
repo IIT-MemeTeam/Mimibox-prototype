@@ -1,0 +1,7 @@
+http://www-inf.it-sudparis.eu/cours/java/javatutorial/sound/accessing.html
+https://stackoverflow.com/questions/48342974/java-sound-getting-default-microphone-port
+https://github.com/lkuza2/java-speech-api/wiki/Microphone-Selection
+https://stackoverflow.com/questions/39509597/trying-to-get-audioformat-details-from-mixer
+https://docs.oracle.com/javase/9/security/permissions-java-development-kit.htm#JSSEC-GUID-1E8E213A-D7F2-49F1-A2F0-EFB3397A8C95
+https://blog.securityinnovation.com/blog/2011/09/define-a-security-policy.html
+https://stackoverflow.com/questions/25798200/java-record-mic-to-byte-array-and-play-sound
