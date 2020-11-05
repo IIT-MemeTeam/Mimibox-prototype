@@ -35,11 +35,11 @@ public class AudioListener {
 		// clearConsole();
 		System.out.println();
 		selectMicrophone(scanner);
-		Utils.clearConsole();
+		//Utils.clearConsole();
 		selectSpeakers(scanner);
-		Utils.clearConsole();
+		//Utils.clearConsole();
 		selectFormat(scanner);
-		Utils.clearConsole();
+		//Utils.clearConsole();
 		selectTimespan(scanner);
 	}
 
