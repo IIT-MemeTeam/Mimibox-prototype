@@ -204,10 +204,15 @@ public class MimiBox {
 		System.out.println("How long in seconds should it listen for?");
 		int seconds = Integer.parseInt(scanner.nextLine());
 		try {
-			System.out.println("Using " + seconds);
+
 			this.audioManager.startListening(seconds);
+			this.audioManager.listenerThread.addAudioListener(new AudioDataWriter(""));
+			
+			Thread.sleep(5);
+			while (this.audioManager.listenerThread.isRunning()) { // TODO: change scope
+				Thread.sleep(10);
+			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

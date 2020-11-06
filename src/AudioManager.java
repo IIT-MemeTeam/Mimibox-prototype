@@ -17,7 +17,7 @@ public class AudioManager {
 	private AudioFormat currentAudioFormat;
 	private TargetDataLine input = null;
 	private SourceDataLine output = null;
-	
+
 	AudioListener listenerThread;
 
 	public AudioManager() {
@@ -138,14 +138,14 @@ public class AudioManager {
 
 		throw new NameNotFoundException("Output device '" + name + "' could not be found");
 	}
-	
+
 	public void setFormat(String format) throws ConfigurationException, NameNotFoundException {
 		if (!hasConfigInput()) {
 			throw new ConfigurationException("Input source needs to be set first");
 		} else {
 			AudioFormat[] formats = getAllAudioFormatTypes();
 			boolean isFound = false;
-			
+
 			int i = 0;
 			while (i < formats.length && isFound == false) {
 				if (formats[i].toString().equals(format)) {
@@ -154,7 +154,7 @@ public class AudioManager {
 				}
 				i++;
 			}
-			
+
 			throw new NameNotFoundException("Audio Format '" + format + "' could not be found");
 		}
 	}
@@ -183,13 +183,13 @@ public class AudioManager {
 	public String[] getAvailableFormats() {
 		AudioFormat[] formats = getAllAudioFormatTypes();
 		String[] result = new String[formats.length];
-		
+
 		int i = 0;
 		while (i < result.length) {
-			result[i]= formats[i].toString(); 
+			result[i] = formats[i].toString();
 			i++;
 		}
-		
+
 		return result;
 	}
 
@@ -214,15 +214,21 @@ public class AudioManager {
 		AudioFormat[] result = new AudioFormat[formats.size()];
 		return formats.toArray(result);
 	}
-	
+
 	public void startListening(int seconds) throws Exception {
 		if (this.listenerThread != null && this.listenerThread.isRunning()) {
 			throw new Exception("AudioListener is already running");
 		} else {
 			try {
-				this.listenerThread = new AudioListener(seconds, this.currentInputInfo, this.currentOutputInfo, this.currentAudioFormat);
+
+				System.out.println("Manager on thread " + Thread.currentThread().getId());
+				this.listenerThread = new AudioListener(seconds, this.currentInputInfo, this.currentOutputInfo,
+						this.currentAudioFormat);
+
+				this.listenerThread.addAudioListener(new AudioDataWriter(""));
+				
 				this.listenerThread.start();
-			}  catch (Exception e) {
+			} catch (Exception e) {
 				System.out.println("Error occured while listening:");
 				e.printStackTrace();
 			} finally {
@@ -234,7 +240,7 @@ public class AudioManager {
 			}
 		}
 	}
-	
+
 	public void stopListening() {
 		if (this.listenerThread != null) {
 			this.listenerThread.interrupt();

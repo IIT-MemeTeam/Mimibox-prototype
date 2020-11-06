@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -23,12 +25,16 @@ public class AudioListener implements Runnable {
 	
 	private Long timerDelay;
 	Timer timer;
+	
+	EventListener[] eventListeners;
+	ArrayList<AudioObserver> audioListeners;
 
 	public AudioListener(int seconds, Mixer.Info input, Mixer.Info output, AudioFormat audioFormat)
 			throws LineUnavailableException {
 		this.running = new AtomicBoolean(false);
 		this.stopped = new AtomicBoolean(true);
 		this.isSetup = false;
+		audioListeners = new ArrayList<AudioObserver>();
 
 		// Output
 		Mixer speakerMixer = AudioSystem.getMixer(output);
@@ -41,9 +47,12 @@ public class AudioListener implements Runnable {
 		inputDataLine = (TargetDataLine) micMixer.getLine(info);
 		
 		this.timerDelay = TimeUnit.SECONDS.toMillis(seconds);
-		System.out.println("Set timer to " + timerDelay + " from " + seconds);
 		this.timer = new Timer();
 		this.isSetup = true;
+	}
+	
+	public void addAudioListener(AudioObserver observer) {
+		this.audioListeners.add(observer);
 	}
 
 	public boolean isRunning() {
@@ -81,6 +90,7 @@ public class AudioListener implements Runnable {
 	}
 
 	public void run() {
+		System.out.println("Starting on thread " + Thread.currentThread().getId());
 		this.running.set(true);
         this.stopped.set(false);
 		try {
@@ -96,6 +106,7 @@ public class AudioListener implements Runnable {
 			while (this.isRunning()) {
 				readBytes = this.inputDataLine.read(data, 0, data.length);
 				this.outputDataLine.write(data, 0, readBytes);
+				notifyAllObservers(data); // Should be on a different thread
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -111,7 +122,13 @@ public class AudioListener implements Runnable {
 		this.stopped.set(true);
 	}
 	
-
+	private void notifyAllObservers(byte[] data) {
+		if (this.audioListeners != null) {
+			for (AudioObserver observer : this.audioListeners) {
+				observer.onAudioRecieved(data);
+			}
+		}
+	}
 
 	private void printMicOutput(byte[] data) {
 		// clearConsole();
