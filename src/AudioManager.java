@@ -225,7 +225,7 @@ public class AudioManager {
 				this.listenerThread = new AudioListener(seconds, this.currentInputInfo, this.currentOutputInfo,
 						this.currentAudioFormat);
 
-				this.listenerThread.addAudioListener(new AudioDataWriter(""));
+				this.listenerThread.addAudioListener(new AudioDataWriter("output.wav"));
 				
 				this.listenerThread.start();
 			} catch (Exception e) {

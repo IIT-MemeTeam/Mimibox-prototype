@@ -206,7 +206,6 @@ public class MimiBox {
 		try {
 
 			this.audioManager.startListening(seconds);
-			this.audioManager.listenerThread.addAudioListener(new AudioDataWriter(""));
 			
 			Thread.sleep(5);
 			while (this.audioManager.listenerThread.isRunning()) { // TODO: change scope

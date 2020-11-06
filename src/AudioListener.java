@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
@@ -52,6 +54,7 @@ public class AudioListener implements Runnable {
 	}
 	
 	public void addAudioListener(AudioObserver observer) {
+		observer.setDataLine(this.inputDataLine);
 		this.audioListeners.add(observer);
 	}
 
@@ -94,6 +97,8 @@ public class AudioListener implements Runnable {
 		this.running.set(true);
         this.stopped.set(false);
 		try {
+
+			this.inputDataLine.addLineListener(this.audioListeners.get(0));
 			this.inputDataLine.open();
 			this.outputDataLine.open();
 
