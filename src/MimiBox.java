@@ -2,19 +2,16 @@ import java.security.Permissions;
 import java.util.Scanner;
 
 import javax.sound.sampled.AudioPermission;
-import javax.sound.sampled.Mixer;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.TargetDataLine;
 
 public class MimiBox {
 	Scanner scanner;
-	AudioListener audioListener;
+	AudioManager audioManager;
 
 	private boolean wasSecuritySuccessful;
 
 	public MimiBox() {
 		scanner = new Scanner(System.in);
-		audioListener = new AudioListener();
+		audioManager = new AudioManager();
 
 		setupSecurity();
 		showMainMenu();
@@ -66,9 +63,9 @@ public class MimiBox {
 			checkSecurity();
 
 			System.out.println("Current Configuration:");
-			System.out.println("   Input:  " + this.audioListener.getCurrentInputName());
-			System.out.println("   Output: " + this.audioListener.getCurrentOutputName());
-			System.out.println("   Format: " + this.audioListener.getCurrentFormat());
+			System.out.println("   Input:  " + this.audioManager.getCurrentInputName());
+			System.out.println("   Output: " + this.audioManager.getCurrentOutputName());
+			System.out.println("   Format: " + this.audioManager.getCurrentFormat());
 			System.out.println();
 
 			System.out.println();
@@ -106,7 +103,7 @@ public class MimiBox {
 
 	private void configInput() {
 		int selectedIndex = -1;
-		String[] inputs = this.audioListener.getAvailableInputs();
+		String[] inputs = this.audioManager.getAvailableInputs();
 
 		for (int i = 0; i < inputs.length; i++) {
 			String[] info = inputs[i].split(",");
@@ -130,7 +127,7 @@ public class MimiBox {
 			System.out.println("Selected " + inputName);
 			System.out.println();
 			try {
-				this.audioListener.setInput(inputName);
+				this.audioManager.setInput(inputName);
 			} catch (Exception e) {
 				System.out.println("Error!\n " + e.getMessage());
 			}
@@ -139,7 +136,7 @@ public class MimiBox {
 
 	private void configOutput() {
 		int selectedIndex = -1;
-		String[] outputs = this.audioListener.getAvailableOutputs();
+		String[] outputs = this.audioManager.getAvailableOutputs();
 
 		for (int i = 0; i < outputs.length; i++) {
 			String[] info = outputs[i].split(",");
@@ -162,7 +159,7 @@ public class MimiBox {
 			System.out.println("Selected " + outputName);
 			System.out.println();
 			try {
-				this.audioListener.setOutput(outputName);
+				this.audioManager.setOutput(outputName);
 			} catch (Exception e) {
 				System.out.println("Error!\n " + e.getMessage());
 			}
@@ -171,8 +168,8 @@ public class MimiBox {
 
 	private void configFormat() {
 		int selectedIndex = -1;
-		if (this.audioListener.hasConfigInput()) {
-			String[] formats = this.audioListener.getAvailableFormats();
+		if (this.audioManager.hasConfigInput()) {
+			String[] formats = this.audioManager.getAvailableFormats();
 
 			for (int i = 0; i < formats.length; i++) {
 				System.out.println("[" + i + "] " + formats[i].toString());
@@ -192,7 +189,7 @@ public class MimiBox {
 				System.out.println("Selected " + formats[selectedIndex]);
 				System.out.println();
 				try {
-					this.audioListener.setFormat(formats[selectedIndex]);
+					this.audioManager.setFormat(formats[selectedIndex]);
 				} catch (Exception e) {
 					System.out.println("Error!\n " + e.getMessage());
 				}
@@ -204,6 +201,15 @@ public class MimiBox {
 
 	private void startListener() {
 		System.out.println("Start listener");
+		System.out.println("How long in seconds should it listen for?");
+		int seconds = Integer.parseInt(scanner.nextLine());
+		try {
+			System.out.println("Using " + seconds);
+			this.audioManager.startListening(seconds);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void setupSecurity() {
@@ -218,7 +224,7 @@ public class MimiBox {
 				SecurityManager secMan = new SecurityManager();
 				System.setSecurityManager(secMan);
 				secMan.checkPermission(record);
-				// wasSecuritySuccessful = true;
+				wasSecuritySuccessful = true;
 			}
 		} catch (Exception e) {
 			this.wasSecuritySuccessful = false;
@@ -244,6 +250,8 @@ public class MimiBox {
 
 	private void quit() {
 		System.out.println("Exiting...");
+		this.audioManager.stopListening();
+		System.exit(0);
 	}
 
 	public static void main(String[] args) {
