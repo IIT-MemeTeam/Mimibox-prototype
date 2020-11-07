@@ -131,17 +131,4 @@ public class AudioListener implements Runnable {
 			}
 		}
 	}
-
-	private void printMicOutput(byte[] data) {
-		// clearConsole();
-		// System.out.println("Listening...\n\n");
-
-		int j = 0;
-		while (j < data.length) {
-			System.out.print(data[j] + " ");
-			j++;
-		}
-		// System.out.println();
-	}
-
 }

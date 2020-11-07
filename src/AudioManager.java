@@ -49,12 +49,6 @@ public class AudioManager {
 		}
 	}
 
-//	private void selectTimespan(Scanner scanner) {
-//		System.out.println();
-//		System.out.println("How many seconds would you like to record for?");
-//		this.listenLength = Integer.parseInt(scanner.nextLine());
-//	}
-
 	public boolean hasConfigInput() {
 		return this.currentInputInfo != null;
 	}

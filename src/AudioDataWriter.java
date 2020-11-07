@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineEvent;
@@ -14,7 +13,6 @@ import javax.sound.sampled.AudioFileFormat;
 
 public class AudioDataWriter extends AudioObserver {
 	private String filePath;
-	private AudioInputStream audioInputStream;
 	private ByteArrayOutputStream outputStream;
 
 	public AudioDataWriter(String filePath) {
@@ -23,13 +21,11 @@ public class AudioDataWriter extends AudioObserver {
 	}
 
 	public void setDataLine(TargetDataLine dataLine) {
-		audioInputStream = new AudioInputStream(dataLine);
-		outputStream = new ByteArrayOutputStream();
+		this.outputStream = new ByteArrayOutputStream();
 	}
 
 	@Override
 	public void onAudioRecieved(byte[] data) {
-		// System.out.println(Thread.currentThread().getId());
 		try {
 			Utils.clearConsole();
 			System.out.println("Recieved " + outputStream.size() + " bytes");
@@ -46,16 +42,18 @@ public class AudioDataWriter extends AudioObserver {
 		System.out.println("State changed to " + event.getType());
 		if (event.getType() == LineEvent.Type.STOP) {
 			try {
-				writeToFile();
-			} catch (IOException e) {
+				TargetDataLine inputDataLine = (TargetDataLine) event.getLine();
+				writeToFile(new AudioInputStream(inputDataLine));
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else if (event.getType() == LineEvent.Type.START) {
+			//event.getLine().getLineInfo(;
 		}
 	}
 
-	private void writeToFile() throws IOException {
+	private void writeToFile(AudioInputStream inputStream) throws IOException {
 		FileOutputStream out = null;
 		try {
 			// TODO: Fix path
@@ -68,7 +66,7 @@ public class AudioDataWriter extends AudioObserver {
 			byte[] abAudioData = this.outputStream.toByteArray();
 
 			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(abAudioData);
-			AudioInputStream outputAIS = new AudioInputStream(byteArrayInputStream, audioInputStream.getFormat(),
+			AudioInputStream outputAIS = new AudioInputStream(byteArrayInputStream, inputStream.getFormat(),
 					abAudioData.length);
 
 			AudioSystem.write(outputAIS, AudioFileFormat.Type.WAVE, out);
