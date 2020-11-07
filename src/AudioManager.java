@@ -220,12 +220,10 @@ public class AudioManager {
 			throw new Exception("AudioListener is already running");
 		} else {
 			try {
-
-				System.out.println("Manager on thread " + Thread.currentThread().getId());
 				this.listenerThread = new AudioListener(seconds, this.currentInputInfo, this.currentOutputInfo,
 						this.currentAudioFormat);
 
-				this.listenerThread.addAudioListener(new AudioDataWriter("output.wav"));
+				this.listenerThread.addAudioListener(new AudioDataWriter("./output.wav"));
 				
 				this.listenerThread.start();
 			} catch (Exception e) {

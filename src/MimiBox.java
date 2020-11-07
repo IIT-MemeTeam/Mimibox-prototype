@@ -1,7 +1,4 @@
-import java.security.Permissions;
 import java.util.Scanner;
-
-import javax.sound.sampled.AudioPermission;
 
 public class MimiBox {
 	Scanner scanner;
@@ -13,7 +10,6 @@ public class MimiBox {
 		scanner = new Scanner(System.in);
 		audioManager = new AudioManager();
 
-		setupSecurity();
 		showMainMenu();
 	}
 
@@ -22,8 +18,6 @@ public class MimiBox {
 		while (true) {
 			Utils.clearConsole();
 			printHeader("Mimi-Box Proof of Concept");
-
-			checkSecurity();
 
 			System.out.println();
 			System.out.println("(C)onfigure Audio");
@@ -60,7 +54,6 @@ public class MimiBox {
 
 			Utils.clearConsole();
 			printHeader("Configure Audio");
-			checkSecurity();
 
 			System.out.println("Current Configuration:");
 			System.out.println("   Input:  " + this.audioManager.getCurrentInputName());
@@ -216,36 +209,6 @@ public class MimiBox {
 		}
 	}
 
-	private void setupSecurity() {
-		AudioPermission record = new AudioPermission("record");
-		AudioPermission play = new AudioPermission("record");
-		Permissions permissions = new Permissions();
-		permissions.add(play);
-		permissions.add(record);
-
-		try {
-			if (System.getSecurityManager() == null) {
-				SecurityManager secMan = new SecurityManager();
-				System.setSecurityManager(secMan);
-				secMan.checkPermission(record);
-				wasSecuritySuccessful = true;
-			}
-		} catch (Exception e) {
-			this.wasSecuritySuccessful = false;
-		}
-	}
-
-	private void checkSecurity() {
-		if (!wasSecuritySuccessful) {
-			System.err.println("Failed to set security policies. Microphone and/or speakers may not be accessable.");
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	private void printHeader(String title) {
 		System.out.println("-================================-");
 		System.out.println("  " + title);
@@ -259,7 +222,8 @@ public class MimiBox {
 	}
 
 	public static void main(String[] args) {
+		final String dir = System.getProperty("user.dir");
+        System.out.println("current dir = " + dir);
 		MimiBox mimiBox = new MimiBox();
 	}
-
 }
