@@ -1,9 +1,0 @@
-/* AUTOMATICALLY GENERATED ON Thu Nov 05 17:44:34 AEDT 2020*/
-/* DO NOT EDIT */
-
-grant {
-  permission javax.sound.sampled.AudioPermission "play";
-  permission javax.sound.sampled.AudioPermission "record";
-  permission java.io.FilePermission "<<ALL FILES>>", "read, write, delete, execute";
-};
-
